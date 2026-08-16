@@ -25,6 +25,7 @@ export default function App(props: { children?: JSX.Element }) {
           </a>
           <nav>
             <a href="/">Plans</a>
+            <a href="/profile">Profile</a>
             <button class="link" onClick={onLogout}>
               Log out ({user()!.display_name})
             </button>

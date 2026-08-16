@@ -8,6 +8,7 @@ from .auth.routes import auth_bp
 from .goal_types.routes import goal_types_bp
 from .goals.routes import goals_bp
 from .plans.routes import plans_bp
+from .profile.routes import profile_bp
 
 
 def create_app(config=None):
@@ -28,6 +29,7 @@ def create_app(config=None):
     app.register_blueprint(goal_types_bp, url_prefix="/api/goal-types")
     app.register_blueprint(goals_bp, url_prefix="/api/goals")
     app.register_blueprint(plans_bp, url_prefix="/api/plans")
+    app.register_blueprint(profile_bp, url_prefix="/api/profile")
 
     @app.errorhandler(ApiError)
     def api_error(e):

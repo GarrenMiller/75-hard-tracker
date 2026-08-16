@@ -47,6 +47,7 @@ def freeze(monkeypatch):
         import app.goals.service as gs
         import app.plans.routes as pr
         import app.plans.service as ps
+        import app.profile.service as pf
         import app.util as util
 
         monkeypatch.setattr(util, "today_str", lambda: date_str)
@@ -56,6 +57,7 @@ def freeze(monkeypatch):
         monkeypatch.setattr(ps, "today_str", lambda: date_str)
         monkeypatch.setattr(ps, "utc_now_str", lambda: f"{date_str} 08:00:00")
         monkeypatch.setattr(pr, "utc_now_str", lambda: f"{date_str} 08:00:00")
+        monkeypatch.setattr(pf, "today_str", lambda: date_str)
         return date_str
 
     return _freeze

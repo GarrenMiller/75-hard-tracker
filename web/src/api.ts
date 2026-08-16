@@ -2,6 +2,7 @@ export interface User {
   id: number;
   email: string;
   display_name: string;
+  created_at?: string;
 }
 
 export interface GoalType {
@@ -68,6 +69,31 @@ export interface Progress {
     goal: Goal;
     today: { completed: boolean; progress: number; detail: Record<string, unknown> };
     streak: number;
+  }[];
+}
+
+export interface Profile {
+  user: User;
+  stats: {
+    goals_total: number;
+    goals_active: number;
+    plans_total: number;
+    plans_active: number;
+    plans_failed: number;
+    check_ins_total: number;
+    best_streak: number;
+    member_days: number;
+  };
+  goals: {
+    goal: Goal;
+    streak: number;
+    total_completions: number;
+    last_completed_at: string | null;
+  }[];
+  plans: {
+    plan: Plan;
+    cycle_day: number | null;
+    cycle_total_days: number | null;
   }[];
 }
 
@@ -161,4 +187,6 @@ export const api = {
   restartPlan: (id: number) => request<Plan>(`/plans/${id}/restart`, { method: "POST" }),
 
   progress: (id: number) => request<Progress>(`/plans/${id}/progress`),
+
+  profile: () => request<Profile>("/profile"),
 };

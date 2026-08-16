@@ -7,6 +7,7 @@ import PlanForm from "./pages/PlanForm";
 import GoalForm from "./pages/GoalForm";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 import "./index.css";
 
 render(
@@ -19,6 +20,7 @@ render(
         <Route path="/plans/new" component={PlanForm} />
         <Route path="/plans/:id" component={PlanDetail} />
         <Route path="/goals/new" component={GoalForm} />
+        <Route path="/profile" component={Profile} />
       </Route>
     </Router>
   ),
