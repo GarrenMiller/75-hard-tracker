@@ -1,0 +1,24 @@
+services:
+  api:
+    build:
+      context: ./api
+      target: dev
+    command: flask --app wsgi:app run --host 0.0.0.0 --port 5000 --reload
+    environment:
+      DATABASE_PATH: /app/instance/tracker.db
+      SECRET_KEY: dev-secret
+      FLASK_DEBUG: "1"
+    volumes:
+      - ./api:/app
+    ports:
+      - "5001:5000"
+
+  test:
+    build:
+      context: ./api
+      target: dev
+    command: pytest
+    volumes:
+      - ./api:/app
+    environment:
+      SECRET_KEY: test-secret

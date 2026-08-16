@@ -1,0 +1,21 @@
+services:
+  api:
+    build:
+      context: ./api
+    environment:
+      DATABASE_PATH: /data/tracker.db
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+    volumes:
+      - db_data:/data
+    ports:
+      - "5001:5000"
+
+  web:
+    build: ./web
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  db_data:
