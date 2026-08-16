@@ -52,6 +52,8 @@ export interface Plan {
   status: string;
   cycle_count: number;
   goal_count: number;
+  cycle_day: number | null;
+  cycle_total_days: number | null;
   goals?: Goal[];
 }
 
@@ -100,6 +102,7 @@ export interface Profile {
     streak: number;
     total_completions: number;
     last_completed_at: string | null;
+    plans: { id: number; name: string }[];
   }[];
   plans: {
     plan: Plan;

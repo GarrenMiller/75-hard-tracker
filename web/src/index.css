@@ -449,6 +449,68 @@ label.radio input {
   color: var(--muted);
 }
 
+.badge.plan {
+  background: rgba(79, 140, 255, 0.15);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.badge.plan:hover {
+  background: rgba(79, 140, 255, 0.25);
+}
+
+.icon-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.goal-plans {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.no-plan {
+  font-style: italic;
+}
+
+.progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+  margin: 10px 0 4px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.progress-label {
+  margin: 0;
+}
+
 .stats {
   display: flex;
   gap: 12px;

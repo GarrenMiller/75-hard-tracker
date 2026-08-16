@@ -1,6 +1,8 @@
 import { useNavigate } from "@solidjs/router";
 import { createResource, createSignal, For, Show } from "solid-js";
 import { api } from "../api";
+import EditButton from "../components/EditButton";
+import ProgressBar from "../components/ProgressBar";
 
 const STATUS_LABEL: Record<string, string> = {
   active: "Active",
@@ -72,14 +74,15 @@ export default function Profile() {
                             {STATUS_LABEL[item.plan.status] ?? item.plan.status}
                           </span>
                         </div>
+                        <ProgressBar day={item.cycle_day} total={item.cycle_total_days} />
+                        <Show when={item.cycle_day === null}>
+                          <p class="hint">Failed — restart from plan page</p>
+                        </Show>
                         <p class="hint">
-                          {item.cycle_day !== null
-                            ? `Day ${item.cycle_day} of ${item.cycle_total_days}`
-                            : "Failed — restart from plan page"}
-                          {" · "}
                           {item.plan.goal_count} goals · cycle #{item.plan.cycle_count}
                         </p>
                       </div>
+                      <EditButton planId={item.plan.id} />
                     </div>
                   )}
                 </For>
@@ -104,6 +107,23 @@ export default function Profile() {
                             Streak {item.streak} · {item.total_completions} total
                             {item.last_completed_at ? ` · last ${formatDate(item.last_completed_at)}` : ""}
                           </p>
+                          <Show when={item.plans.length} fallback={<span class="hint no-plan">Not in a plan</span>}>
+                            <div class="goal-plans">
+                              <For each={item.plans}>
+                                {(p) => (
+                                  <span
+                                    class="badge plan"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/plans/${p.id}`);
+                                    }}
+                                  >
+                                    {p.name}
+                                  </span>
+                                )}
+                              </For>
+                            </div>
+                          </Show>
                         </div>
                         <div class="goal-action">
                           <Show when={today?.completed}>

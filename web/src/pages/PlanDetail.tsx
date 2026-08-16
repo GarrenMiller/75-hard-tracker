@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { createResource, createSignal, For, Show } from "solid-js";
 import { api, type Progress } from "../api";
+import EditButton from "../components/EditButton";
 
 const STATUS_LABEL: Record<string, string> = {
   active: "Active",
@@ -208,12 +209,12 @@ export default function PlanDetail() {
             </div>
 
             <div class="row footer-actions">
-              <a class="link" href="/">
-                ← Back
-              </a>
-              <button class="danger" onClick={deletePlan}>
-                Delete plan
-              </button>
+              <div class="row">
+                <EditButton planId={p().plan.id} />
+                <button class="danger" onClick={deletePlan}>
+                  Delete plan
+                </button>
+              </div>
             </div>
           </>
         )}

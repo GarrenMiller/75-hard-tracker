@@ -19,6 +19,7 @@ render(
         <Route path="/" component={Dashboard} />
         <Route path="/plans/new" component={PlanForm} />
         <Route path="/plans/:id" component={PlanDetail} />
+        <Route path="/plans/:id/edit" component={PlanForm} />
         <Route path="/goals/new" component={GoalForm} />
         <Route path="/profile" component={Profile} />
       </Route>

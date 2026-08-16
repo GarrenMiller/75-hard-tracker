@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from ..db import get_db
 from ..goal_types.registry import get as get_goal_type
 from ..goals.service import goal_payload
-from ..plans.service import get_cycles, plan_payload, sync_plan
+from ..plans.service import plan_payload, sync_plan
 from ..util import today_str
 
 
@@ -85,12 +85,18 @@ def build_profile(user, today=None):
         streak = _current_streak(g, today)
         total_check_ins += completions
         best_streak = max(best_streak, streak)
+        member_plans = db.execute(
+            "SELECT p.id, p.name FROM plan_goals pg JOIN plans p ON p.id = pg.plan_id "
+            "WHERE pg.goal_id = ? ORDER BY p.id",
+            (g["id"],),
+        ).fetchall()
         goal_stats.append(
             {
                 "goal": goal_payload(g, include_today=True),
                 "streak": streak,
                 "total_completions": completions,
                 "last_completed_at": last,
+                "plans": [{"id": p["id"], "name": p["name"]} for p in member_plans],
             }
         )
 
@@ -99,21 +105,16 @@ def build_profile(user, today=None):
     plans_failed = 0
     for p in plans:
         p = sync_plan(p, today)
-        rules = json.loads(p["difficulty_rules"] or "{}")
-        cycle_total = rules.get("duration_days", 75)
-        cycle_day = None
-        active_cycles = [c for c in get_cycles(p["id"]) if c["outcome"] == "active"]
-        if active_cycles:
-            cycle_day = (today - _parse_date(active_cycles[-1]["started_at"])).days + 1
+        payload = plan_payload(p, today=today)
         if p["status"] in ("active", "in_grace"):
             plans_active += 1
         elif p["status"] == "failed":
             plans_failed += 1
         plan_stats.append(
             {
-                "plan": plan_payload(p),
-                "cycle_day": cycle_day,
-                "cycle_total_days": cycle_total,
+                "plan": payload,
+                "cycle_day": payload["cycle_day"],
+                "cycle_total_days": payload["cycle_total_days"],
             }
         )
 

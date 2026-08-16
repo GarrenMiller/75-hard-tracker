@@ -101,6 +101,17 @@ def test_profile_inactive_goal_counted(client, auth):
     assert data["stats"]["goals_active"] == 0
 
 
+def test_profile_goal_plan_association(client, auth):
+    goal_in = make_goal(client, auth["token"])
+    goal_standalone = make_goal(client, auth["token"])
+    plan = make_plan(client, auth["token"], [goal_in["id"]])
+
+    data = profile(client, auth["token"])
+    by_id = {g["goal"]["id"]: g for g in data["goals"]}
+    assert by_id[goal_in["id"]]["plans"] == [{"id": plan["id"], "name": plan["name"]}]
+    assert by_id[goal_standalone["id"]]["plans"] == []
+
+
 def test_profile_failed_plan(client, auth, freeze):
     freeze("2026-08-15")
     goal = make_goal(client, auth["token"])

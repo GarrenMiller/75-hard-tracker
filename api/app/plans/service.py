@@ -39,11 +39,12 @@ def load_plan_goals(plan_id, user_id):
     ).fetchall()
 
 
-def plan_payload(plan, include_goals=False):
+def plan_payload(plan, include_goals=False, today=None):
     from ..goals.service import goal_payload
 
     cycles = get_cycles(plan["id"])
     goals = load_plan_goals(plan["id"], plan["user_id"])
+    cycle_day, cycle_total_days = _cycle_day_info(plan, cycles, today)
     payload = {
         "id": plan["id"],
         "name": plan["name"],
@@ -52,10 +53,23 @@ def plan_payload(plan, include_goals=False):
         "status": plan["status"],
         "cycle_count": len(cycles),
         "goal_count": len(goals),
+        "cycle_day": cycle_day,
+        "cycle_total_days": cycle_total_days,
     }
     if include_goals:
         payload["goals"] = [goal_payload(g) for g in goals]
     return payload
+
+
+def _cycle_day_info(plan, cycles, today=None):
+    rules = json.loads(plan["difficulty_rules"] or "{}")
+    total = rules.get("duration_days", 75)
+    active = [c for c in cycles if c["outcome"] == "active"]
+    if not active:
+        return None, total
+    if today is None:
+        today = _parse_date(today_str())
+    return (today - _parse_date(active[-1]["started_at"])).days + 1, total
 
 
 def _parse_date(value):

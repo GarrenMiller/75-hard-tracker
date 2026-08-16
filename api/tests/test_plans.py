@@ -83,6 +83,22 @@ def test_list_plans(client, auth):
     assert len(resp.get_json()["plans"]) == 1
 
 
+def test_list_plans_includes_cycle_day(client, auth, freeze):
+    freeze("2026-08-15")
+    goal = make_goal(client, auth["token"])
+    make_plan(client, auth["token"], [goal["id"]])
+    check_in(client, auth["token"], goal["id"])
+    resp = client.get("/api/plans", headers=auth_headers(auth["token"]))
+    plan = resp.get_json()["plans"][0]
+    assert plan["cycle_day"] == 1
+    assert plan["cycle_total_days"] == 75
+
+    freeze("2026-08-16")
+    check_in(client, auth["token"], goal["id"])
+    resp = client.get("/api/plans", headers=auth_headers(auth["token"]))
+    assert resp.get_json()["plans"][0]["cycle_day"] == 2
+
+
 def test_delete_plan(client, auth):
     goal = make_goal(client, auth["token"])
     plan = make_plan(client, auth["token"], [goal["id"]])
@@ -266,3 +282,18 @@ def test_update_plan_replaces_goals(client, auth):
     data = resp.get_json()
     assert data["name"] == "Updated"
     assert data["goal_count"] == 2
+
+
+def test_update_plan_difficulty_rules_persist(client, auth):
+    goal = make_goal(client, auth["token"])
+    plan = make_plan(client, auth["token"], [goal["id"]])
+    resp = client.patch(
+        f"/api/plans/{plan['id']}",
+        json={"difficulty_rules": {"duration_days": 30, "lapse_policy": "grace_days", "grace_days": 5}},
+        headers=auth_headers(auth["token"]),
+    )
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["difficulty_rules"] == {"duration_days": 30, "lapse_policy": "grace_days", "grace_days": 5}
+    resp = client.get(f"/api/plans/{plan['id']}", headers=auth_headers(auth["token"]))
+    assert resp.get_json()["difficulty_rules"]["duration_days"] == 30

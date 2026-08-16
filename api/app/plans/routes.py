@@ -91,7 +91,11 @@ def list_plans():
         "SELECT * FROM plans WHERE user_id = ? ORDER BY id DESC",
         (g.user["id"],),
     ).fetchall()
-    return jsonify({"plans": [plan_payload(r) for r in rows]})
+    plans = []
+    for plan in rows:
+        plan = sync_plan(plan)
+        plans.append(plan_payload(plan))
+    return jsonify({"plans": plans})
 
 
 @plans_bp.get("/<int:plan_id>")

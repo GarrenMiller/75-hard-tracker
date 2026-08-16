@@ -1,6 +1,8 @@
 import { useNavigate } from "@solidjs/router";
 import { createResource, For, Show } from "solid-js";
 import { api, type Plan } from "../api";
+import EditButton from "../components/EditButton";
+import ProgressBar from "../components/ProgressBar";
 
 const STATUS_LABEL: Record<string, string> = {
   active: "Active",
@@ -25,9 +27,13 @@ export default function Dashboard() {
               <div class="card plan-card" onClick={() => navigate(`/plans/${plan.id}`)}>
                 <div class="row">
                   <h2>{plan.name}</h2>
-                  <span class={`badge ${plan.status}`}>{STATUS_LABEL[plan.status] ?? plan.status}</span>
+                  <div class="row">
+                    <span class={`badge ${plan.status}`}>{STATUS_LABEL[plan.status] ?? plan.status}</span>
+                    <EditButton planId={plan.id} />
+                  </div>
                 </div>
                 <p>{plan.goal_count} goals · cycle #{plan.cycle_count}</p>
+                <ProgressBar day={plan.cycle_day} total={plan.cycle_total_days} />
                 <p class="hint">Started {formatDate(plan.started_at)}</p>
               </div>
             )}

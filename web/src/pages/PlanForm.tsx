@@ -1,10 +1,14 @@
-import { useNavigate } from "@solidjs/router";
-import { createResource, createSignal, For, Show } from "solid-js";
+import { useNavigate, useParams } from "@solidjs/router";
+import { createEffect, createResource, createSignal, For, Show } from "solid-js";
 import { api, ApiError } from "../api";
 
 export default function PlanForm() {
   const navigate = useNavigate();
+  const params = useParams();
+  const planId = params.id ? Number(params.id) : null;
+  const [plan] = createResource(() => (planId ? api.getPlan(planId) : Promise.resolve(null)));
   const [goals] = createResource(() => api.listGoals());
+
   const [name, setName] = createSignal("");
   const [selected, setSelected] = createSignal<number[]>([]);
   const [duration, setDuration] = createSignal(75);
@@ -12,6 +16,19 @@ export default function PlanForm() {
   const [grace, setGrace] = createSignal(0);
   const [error, setError] = createSignal<string | null>(null);
   const [submitting, setSubmitting] = createSignal(false);
+
+  let prefilled = false;
+  createEffect(() => {
+    const p = plan();
+    if (p && !prefilled) {
+      prefilled = true;
+      setName(p.name);
+      setDuration(p.difficulty_rules.duration_days);
+      setPolicy(p.difficulty_rules.lapse_policy);
+      setGrace(p.difficulty_rules.grace_days);
+      setSelected((p.goals ?? []).map((g) => g.id));
+    }
+  });
 
   const toggle = (id: number) =>
     setSelected((prev) =>
@@ -23,7 +40,7 @@ export default function PlanForm() {
     setError(null);
     setSubmitting(true);
     try {
-      const plan = await api.createPlan({
+      const body = {
         name: name() || "My plan",
         goal_ids: selected(),
         difficulty_rules: {
@@ -31,8 +48,9 @@ export default function PlanForm() {
           lapse_policy: policy(),
           grace_days: grace(),
         },
-      });
-      navigate(`/plans/${plan.id}`);
+      };
+      const saved = planId ? await api.updatePlan(planId, body) : await api.createPlan(body);
+      navigate(`/plans/${saved.id}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
@@ -42,7 +60,7 @@ export default function PlanForm() {
 
   return (
     <form class="card" onSubmit={onSubmit}>
-      <h1>New plan</h1>
+      <h1>{planId ? "Edit plan" : "New plan"}</h1>
       <label>
         Plan name
         <input value={name()} onInput={(e) => setName(e.currentTarget.value)} placeholder="75 Hard" />
@@ -116,7 +134,7 @@ export default function PlanForm() {
           ← Back
         </a>
         <button type="submit" disabled={submitting()}>
-          {submitting() ? "Creating…" : "Create plan"}
+          {submitting() ? "Saving…" : planId ? "Save changes" : "Create plan"}
         </button>
       </div>
     </form>
