@@ -62,11 +62,17 @@ export default function Profile() {
             </Show>
 
             <Show when={p().plans.length}>
-              <h2>Plans</h2>
+              <h2 class="section-title">
+                <span class="dot plan" />
+                Plans ({p().plans.length})
+              </h2>
               <div class="list">
                 <For each={p().plans}>
                   {(item) => (
-                    <div class="card goal-row" onClick={() => navigate(`/plans/${item.plan.id}`)}>
+                    <div class="card goal-row plan-item" onClick={() => navigate(`/plans/${item.plan.id}`)}>
+                      <span class="item-icon plan">
+                        <IconClipboard />
+                      </span>
                       <div class="goal-info">
                         <div class="row">
                           <h3>{item.plan.name}</h3>
@@ -90,14 +96,20 @@ export default function Profile() {
             </Show>
 
             <Show when={p().goals.length}>
-              <h2>Goals</h2>
+              <h2 class="section-title">
+                <span class="dot goal" />
+                Goals ({p().goals.length})
+              </h2>
               <div class="list">
                 <For each={p().goals}>
                   {(item) => {
                     const isQuantity = item.goal.goal_type_key === "daily_quantity";
                     const today = item.goal.today;
                     return (
-                      <div class="card goal-row">
+                      <div class="card goal-row goal-item">
+                        <span class="item-icon goal">
+                          <IconTarget />
+                        </span>
                         <div class="goal-info">
                           <div class="row">
                             <h3>{item.goal.name}</h3>
@@ -181,4 +193,23 @@ function initials(name: string): string {
 
 function formatDate(value: string): string {
   return value.slice(0, 10);
+}
+
+function IconClipboard() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="8" y="2" width="8" height="4" rx="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </svg>
+  );
+}
+
+function IconTarget() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1" />
+    </svg>
+  );
 }
