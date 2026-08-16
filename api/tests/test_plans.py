@@ -1,8 +1,10 @@
 from conftest import auth_headers, make_goal, make_plan
 
 
-def check_in(client, token, goal_id, completed_at=None):
+def check_in(client, token, goal_id, completed_at=None, value=None):
     payload = {} if completed_at is None else {"completed_at": completed_at}
+    if value is not None:
+        payload["value"] = value
     resp = client.post(
         f"/api/goals/{goal_id}/check-ins", json=payload, headers=auth_headers(token)
     )
@@ -100,6 +102,35 @@ def test_progress_fresh_plan(client, auth, freeze):
     assert data["cycle"]["total_days"] == 75
     assert data["days"][-1]["status"] == "pending"
     assert data["goals"][0]["today"]["completed"] is False
+
+
+def test_progress_days_include_per_goal_detail(client, auth, freeze):
+    freeze("2026-08-15")
+    goal1 = make_goal(client, auth["token"])
+    goal2 = make_goal(client, auth["token"], key="daily_quantity")
+    plan = make_plan(client, auth["token"], [goal1["id"], goal2["id"]])
+    check_in(client, auth["token"], goal1["id"])
+    check_in(client, auth["token"], goal2["id"], "2026-08-15 09:00:00", value={"amount": 1})
+
+    data = progress(client, auth["token"], plan["id"])
+    day = data["days"][-1]
+    assert day["date"] == "2026-08-15"
+    assert day["status"] == "completed"
+    assert {g["id"] for g in day["goals"]} == {goal1["id"], goal2["id"]}
+    by_id = {g["id"]: g for g in day["goals"]}
+    assert by_id[goal1["id"]]["completed"] is True
+    assert by_id[goal2["id"]]["completed"] is True
+    assert by_id[goal2["id"]]["detail"]["current"] == 1
+
+    freeze("2026-08-16")
+    check_in(client, auth["token"], goal1["id"])
+    data = progress(client, auth["token"], plan["id"])
+    day = data["days"][-1]
+    assert day["status"] == "partial"
+    by_id = {g["id"]: g for g in day["goals"]}
+    assert by_id[goal1["id"]]["completed"] is True
+    assert by_id[goal2["id"]]["completed"] is False
+    assert by_id[goal2["id"]]["progress"] == 0
 
 
 def test_progress_completed_days(client, auth, freeze):

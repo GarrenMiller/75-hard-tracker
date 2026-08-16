@@ -64,7 +64,18 @@ export interface Progress {
     total_days: number;
     missed_days: number;
   } | null;
-  days: { date: string; status: string }[];
+  days: {
+    date: string;
+    status: string;
+    goals: {
+      id: number;
+      name: string;
+      goal_type_key: string;
+      completed: boolean;
+      progress: number;
+      detail: Record<string, unknown>;
+    }[];
+  }[];
   goals: {
     goal: Goal;
     today: { completed: boolean; progress: number; detail: Record<string, unknown> };

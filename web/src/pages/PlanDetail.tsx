@@ -8,6 +8,13 @@ const STATUS_LABEL: Record<string, string> = {
   failed: "Failed",
 };
 
+const DAY_STATUS_LABEL: Record<string, string> = {
+  completed: "All goals done",
+  partial: "Some goals done",
+  missed: "No goals done",
+  pending: "Today · in progress",
+};
+
 export default function PlanDetail() {
   const params = useParams();
   const navigate = useNavigate();
@@ -15,6 +22,10 @@ export default function PlanDetail() {
   const [amounts, setAmounts] = createSignal<Record<number, string>>({});
   const [busyGoal, setBusyGoal] = createSignal<number | null>(null);
   const [actionError, setActionError] = createSignal<string | null>(null);
+  const [selectedDate, setSelectedDate] = createSignal<string | null>(null);
+
+  const toggleDay = (date: string) =>
+    setSelectedDate((cur) => (cur === date ? null : date));
 
   const setAmount = (goalId: number, value: string) =>
     setAmounts((prev) => ({ ...prev, [goalId]: value }));
@@ -90,14 +101,58 @@ export default function PlanDetail() {
             <Show when={p().days.length}>
               <div class="day-strip">
                 <For each={p().days.slice(-30)}>
-                  {(day) => (
-                    <span
-                      class={`day ${day.status}`}
-                      title={`${day.date}: ${day.status}`}
-                    />
-                  )}
+                  {(day) => {
+                    const done = day.goals.filter((g) => g.completed).length;
+                    const label = DAY_STATUS_LABEL[day.status] ?? day.status;
+                    const tip = `${formatShortDate(day.date)} · ${label} · ${done} of ${day.goals.length} goals done`;
+                    return (
+                      <button
+                        type="button"
+                        class={`day ${day.status} ${selectedDate() === day.date ? "selected" : ""}`}
+                        data-tooltip={tip}
+                        aria-label={tip}
+                        onClick={() => toggleDay(day.date)}
+                      />
+                    );
+                  }}
                 </For>
               </div>
+              <div class="legend">
+                <span class="legend-item"><span class="day completed" /> All done</span>
+                <span class="legend-item"><span class="day partial" /> Some done</span>
+                <span class="legend-item"><span class="day missed" /> Missed</span>
+                <span class="legend-item"><span class="day pending" /> Today</span>
+              </div>
+              <Show when={selectedDate()}>
+                {(() => {
+                  const day = p().days.find((d) => d.date === selectedDate());
+                  return day ? (
+                    <div class="card day-detail">
+                      <div class="row">
+                        <h3>{formatShortDate(day.date)}</h3>
+                        <span class="badge subtle">{DAY_STATUS_LABEL[day.status] ?? day.status}</span>
+                      </div>
+                      <ul class="day-goals">
+                        <For each={day.goals}>
+                          {(g) => (
+                            <li>
+                              <span class={`dot ${g.completed ? "done" : "not-done"}`} />
+                              <span class="goal-name">{g.name}</span>
+                              <span class="hint">
+                                {g.completed ? "done" : "not done"}
+                                {g.completed ? (() => {
+                                  const t = formatDetail({ goal_type_key: g.goal_type_key }, g.detail);
+                                  return t ? ` · ${t}` : "";
+                                })() : ""}
+                              </span>
+                            </li>
+                          )}
+                        </For>
+                      </ul>
+                    </div>
+                  ) : null;
+                })()}
+              </Show>
             </Show>
 
             <Show when={actionError()}>
@@ -175,4 +230,12 @@ function formatDetail(goal: { goal_type_key: string }, detail: Record<string, un
     return `${detail.count} / ${detail.times_per_week} this week`;
   }
   return "";
+}
+
+function formatShortDate(value: string): string {
+  const [y, m, d] = value.split("-");
+  return new Date(Number(y), Number(m) - 1, Number(d)).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
 }

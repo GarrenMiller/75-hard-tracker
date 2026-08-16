@@ -211,7 +211,23 @@ def compute_progress(plan, today=None):
             summary = "missed"
         if row["date"] == today_iso and summary == "missed":
             summary = "pending"
-        day_summary.append({"date": row["date"], "status": summary})
+
+        day_goals = []
+        for goal in goals:
+            status = result["status_by_goal_date"].get((goal["id"], row["date"]))
+            if status is None:
+                continue
+            day_goals.append(
+                {
+                    "id": goal["id"],
+                    "name": goal["name"],
+                    "goal_type_key": goal["goal_type_key"],
+                    "completed": status["completed"],
+                    "progress": status["progress"],
+                    "detail": status["detail"],
+                }
+            )
+        day_summary.append({"date": row["date"], "status": summary, "goals": day_goals})
 
     goal_details = []
     for goal in goals:

@@ -26,7 +26,7 @@ export default function GoalForm() {
       await api.createGoal({
         name: name() || (type()?.name ?? "Goal"),
         goal_type_key: typeKey()!,
-        config,
+        config: config(),
       });
       navigate("/");
     } catch (err) {
