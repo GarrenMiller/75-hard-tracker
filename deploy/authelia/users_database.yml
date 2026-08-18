@@ -1,0 +1,6 @@
+users:
+  garren:
+    disabled: false
+    displayname: 'Garren'
+    email: 'garren@localhost'
+    password: '$argon2id$v=19$m=65536,t=3,p=4$9J3PcG2E0T9PMUkRPosEFg$JI8LH2XyE8ivg6L/V1TphO+O7BGdaRArlaWDZrVmi4Y'
