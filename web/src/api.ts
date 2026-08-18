@@ -102,7 +102,7 @@ export interface Profile {
     streak: number;
     total_completions: number;
     last_completed_at: string | null;
-    plans: { id: number; name: string }[];
+    plans: { id: number; name: string; status: string }[];
   }[];
   plans: {
     plan: Plan;

@@ -28,7 +28,7 @@ export default function GoalForm() {
         goal_type_key: typeKey()!,
         config: config(),
       });
-      navigate("/");
+      navigate("/goals");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
@@ -79,7 +79,7 @@ export default function GoalForm() {
         <p class="error">{error()}</p>
       </Show>
       <div class="row">
-        <a class="link" href="/">
+        <a class="link" href="/goals">
           ← Back
         </a>
         <button type="submit" disabled={submitting() || !typeKey()}>

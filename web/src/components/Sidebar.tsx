@@ -25,6 +25,14 @@ export default function Sidebar(props: { open: boolean; onClose: () => void }) {
             <IconGrid />
             <span class="label">Dashboard</span>
           </A>
+          <A href="/plans" activeClass="active" onClick={closeOnMobile}>
+            <IconClipboard />
+            <span class="label">Plans</span>
+          </A>
+          <A href="/goals" activeClass="active" onClick={closeOnMobile}>
+            <IconTarget />
+            <span class="label">Goals</span>
+          </A>
           <A href="/profile" activeClass="active" onClick={closeOnMobile}>
             <IconUser />
             <span class="label">Profile</span>
@@ -99,6 +107,16 @@ function IconClipboard() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="8" y="2" width="8" height="4" rx="1" />
       <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </svg>
+  );
+}
+
+function IconTarget() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1" />
     </svg>
   );
 }

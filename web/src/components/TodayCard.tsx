@@ -1,7 +1,9 @@
+import { useNavigate } from "@solidjs/router";
 import { createResource, createSignal, For, Show } from "solid-js";
 import { api } from "../api";
 
 export default function TodayCard(props: { onCheckedIn?: () => void }) {
+  const navigate = useNavigate();
   const [profile, { refetch }] = createResource(() => api.profile());
   const [amounts, setAmounts] = createSignal<Record<number, string>>({});
   const [busy, setBusy] = createSignal<number | null>(null);
@@ -21,9 +23,14 @@ export default function TodayCard(props: { onCheckedIn?: () => void }) {
     }
   };
 
-  const activeGoals = () => profile()?.goals.filter((g) => g.goal.active) ?? [];
-  const done = () => activeGoals().filter((g) => g.goal.today?.completed).length;
-  const open = () => activeGoals().filter((g) => !g.goal.today?.completed).length;
+  const trackedGoals = () =>
+    (profile()?.goals ?? []).filter(
+      (g) =>
+        g.goal.active &&
+        g.plans.some((p) => p.status === "active" || p.status === "in_grace"),
+    );
+  const done = () => trackedGoals().filter((g) => g.goal.today?.completed).length;
+  const open = () => trackedGoals().filter((g) => !g.goal.today?.completed).length;
 
   return (
     <Show when={profile()}>
@@ -54,16 +61,19 @@ export default function TodayCard(props: { onCheckedIn?: () => void }) {
             </div>
           </div>
           <Show
-            when={activeGoals().length}
-            fallback={<p class="hint">No goals yet. Create a goal to start tracking.</p>}
+            when={trackedGoals().length}
+            fallback={<p class="hint">No active plans. Create or restart a plan to start tracking.</p>}
           >
             <ul class="today-goals">
-              <For each={activeGoals()}>
+              <For each={trackedGoals()}>
                 {(item) => {
                   const g = item.goal;
                   const isQuantity = g.goal_type_key === "daily_quantity";
                   const detail = g.today?.detail ?? {};
                   const detailText = formatDetail(g.goal_type_key, detail);
+                  const activePlans = item.plans.filter(
+                    (p) => p.status === "active" || p.status === "in_grace",
+                  );
                   return (
                     <li class={`today-goal ${g.today?.completed ? "done" : ""}`}>
                       <span class="today-check">
@@ -74,6 +84,18 @@ export default function TodayCard(props: { onCheckedIn?: () => void }) {
                         </Show>
                       </span>
                       <span class="today-goal-name">{g.name}</span>
+                      <span class="today-goal-plans">
+                        <For each={activePlans}>
+                          {(p) => (
+                            <span
+                              class="badge plan"
+                              onClick={() => navigate(`/plans/${p.id}`)}
+                            >
+                              {p.name}
+                            </span>
+                          )}
+                        </For>
+                      </span>
                       <Show when={detailText}>
                         <span class="hint">{detailText}</span>
                       </Show>

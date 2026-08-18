@@ -130,7 +130,7 @@ export default function PlanForm() {
         <p class="error">{error()}</p>
       </Show>
       <div class="row">
-        <a class="link" href="/">
+        <a class="link" href="/plans">
           ← Back
         </a>
         <button type="submit" disabled={submitting()}>

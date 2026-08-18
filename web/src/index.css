@@ -619,6 +619,17 @@ label.radio input {
   border-color: rgba(79, 140, 255, 0.4);
 }
 
+.badge.plan.paused {
+  background: var(--surface-3);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.badge.plan.paused:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
 .icon-btn {
   background: none;
   border: 1px solid var(--border);
@@ -1122,6 +1133,17 @@ label.radio input {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.today-goal-plans {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.today-goal-plans .badge {
+  padding: 2px 7px;
+  font-size: 0.56rem;
 }
 
 .today-goal.done .today-goal-name {

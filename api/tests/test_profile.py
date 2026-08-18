@@ -108,7 +108,9 @@ def test_profile_goal_plan_association(client, auth):
 
     data = profile(client, auth["token"])
     by_id = {g["goal"]["id"]: g for g in data["goals"]}
-    assert by_id[goal_in["id"]]["plans"] == [{"id": plan["id"], "name": plan["name"]}]
+    assert by_id[goal_in["id"]]["plans"] == [
+        {"id": plan["id"], "name": plan["name"], "status": "active"}
+    ]
     assert by_id[goal_standalone["id"]]["plans"] == []
 
 

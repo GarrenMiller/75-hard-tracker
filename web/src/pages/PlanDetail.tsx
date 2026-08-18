@@ -59,7 +59,7 @@ export default function PlanDetail() {
     if (!confirm("Delete this plan?")) return;
     try {
       await api.deletePlan(Number(params.id));
-      navigate("/");
+      navigate("/plans");
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Delete failed");
     }

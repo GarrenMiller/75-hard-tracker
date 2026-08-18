@@ -71,6 +71,8 @@ def build_profile(user, today=None):
     plans = db.execute(
         "SELECT * FROM plans WHERE user_id = ? ORDER BY id DESC", (user_id,)
     ).fetchall()
+    synced_plans = [sync_plan(p, today) for p in plans]
+    status_by_id = {p["id"]: p["status"] for p in synced_plans}
 
     goal_stats = []
     total_check_ins = 0
@@ -96,15 +98,21 @@ def build_profile(user, today=None):
                 "streak": streak,
                 "total_completions": completions,
                 "last_completed_at": last,
-                "plans": [{"id": p["id"], "name": p["name"]} for p in member_plans],
+                "plans": [
+                    {
+                        "id": p["id"],
+                        "name": p["name"],
+                        "status": status_by_id.get(p["id"], "active"),
+                    }
+                    for p in member_plans
+                ],
             }
         )
 
     plan_stats = []
     plans_active = 0
     plans_failed = 0
-    for p in plans:
-        p = sync_plan(p, today)
+    for p in synced_plans:
         payload = plan_payload(p, today=today)
         if p["status"] in ("active", "in_grace"):
             plans_active += 1
