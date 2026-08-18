@@ -22,7 +22,7 @@ authentication_backend:
 access_control:
   default_policy: deny
   rules:
-    - domain: 'garrenmiller.com'
+    - domain: '75-hard.garrenmiller.com'
       policy: one_factor
 
 session:
@@ -30,9 +30,9 @@ session:
   expiration: 1h
   inactivity: 5m
   cookies:
-    - domain: 'garrenmiller.com'
-      authelia_url: 'https://garrenmiller.com/authelia/'
-      default_redirection_url: 'https://garrenmiller.com'
+    - domain: '75-hard.garrenmiller.com'
+      authelia_url: 'https://75-hard.garrenmiller.com/authelia/'
+      default_redirection_url: 'https://75-hard.garrenmiller.com'
 
 storage:
   local:
