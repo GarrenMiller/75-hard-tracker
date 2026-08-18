@@ -2,6 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 import { register } from "../store";
 import { ApiError } from "../api";
+import Logo from "../components/Logo";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -27,8 +28,12 @@ export default function Register() {
 
   return (
     <div class="auth">
+      <div class="auth-mark">
+        <Logo size={44} />
+      </div>
       <form class="card" onSubmit={onSubmit}>
-        <h1>Create account</h1>
+        <h1 class="auth-title">Create account</h1>
+        <p class="tagline">Seventy-five days. No excuses.</p>
         <label>
           Display name
           <input

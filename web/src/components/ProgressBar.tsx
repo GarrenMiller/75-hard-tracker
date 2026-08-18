@@ -13,7 +13,7 @@ export default function ProgressBar(props: { day: number | null; total: number |
         />
       </div>
       <p class="hint progress-label">
-        Day {props.day} of {props.total}
+        DAY {props.day} / {props.total}
       </p>
     </Show>
   );

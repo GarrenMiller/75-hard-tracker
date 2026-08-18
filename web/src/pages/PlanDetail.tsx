@@ -68,156 +68,175 @@ export default function PlanDetail() {
   return (
     <div>
       <Show when={progress()} fallback={<p>Loading…</p>}>
-        {(p) => (
-          <>
-            <div class="row">
-              <h1>{p().plan.name}</h1>
-              <span class={`badge ${p().plan.status}`}>{STATUS_LABEL[p().plan.status] ?? p().plan.status}</span>
-            </div>
-            <Show when={p().plan.status === "failed"}>
-              <p class="error">
-                This plan failed and is paused.{" "}
-                <button onClick={restart}>Restart now</button>
-              </p>
-            </Show>
-            <Show when={p().cycle}>
-              <div class="stats">
-                <div class="card stat">
-                  <span class="stat-value">
-                    {p().cycle!.day}<small>/{p().cycle!.total_days}</small>
-                  </span>
-                  <span class="stat-label">Day</span>
-                </div>
-                <div class="card stat">
-                  <span class="stat-value">{p().cycle!.missed_days}</span>
-                  <span class="stat-label">Missed days</span>
-                </div>
-                <div class="card stat">
-                  <span class="stat-value">{p().plan.cycle_count}</span>
-                  <span class="stat-label">Cycles</span>
-                </div>
+        {(p) => {
+          const visibleDays = () => p().days.slice(-30);
+          const firstVisibleDay = () => p().days.length - visibleDays().length + 1;
+          return (
+            <>
+              <div class="row">
+                <h1>{p().plan.name}</h1>
+                <span class={`badge ${p().plan.status}`}>{STATUS_LABEL[p().plan.status] ?? p().plan.status}</span>
               </div>
-            </Show>
 
-            <Show when={p().days.length}>
-              <div class="day-strip">
-                <For each={p().days.slice(-30)}>
-                  {(day) => {
-                    const done = day.goals.filter((g) => g.completed).length;
-                    const label = DAY_STATUS_LABEL[day.status] ?? day.status;
-                    const tip = `${formatShortDate(day.date)} · ${label} · ${done} of ${day.goals.length} goals done`;
+              <Show when={p().plan.status === "failed"}>
+                <div class="banner">
+                  <span>This plan failed and is paused.</span>
+                  <button onClick={restart}>Restart now</button>
+                </div>
+              </Show>
+
+              <Show when={p().cycle}>
+                <div class={`hero ${p().plan.status}`}>
+                  <span class="hero-label">Day</span>
+                  <span class="hero-num">
+                    {p().cycle!.day}
+                    <small> / {p().cycle!.total_days}</small>
+                  </span>
+                  <span class="hero-sub">
+                    <span>
+                      <strong>{p().cycle!.missed_days}</strong> missed
+                    </span>
+                    <span>
+                      <strong>{p().plan.cycle_count}</strong> cycle{p().plan.cycle_count === 1 ? "" : "s"}
+                    </span>
+                    <span>
+                      <strong>{p().plan.goal_count}</strong> goal{p().plan.goal_count === 1 ? "" : "s"}
+                    </span>
+                  </span>
+                </div>
+              </Show>
+
+              <Show when={p().days.length}>
+                <div class="day-strip">
+                  <For each={visibleDays()}>
+                    {(day) => {
+                      const done = day.goals.filter((g) => g.completed).length;
+                      const label = DAY_STATUS_LABEL[day.status] ?? day.status;
+                      const tip = `Day ${p().days.indexOf(day) + 1} · ${formatShortDate(day.date)} · ${label} · ${done} of ${day.goals.length} goals done`;
+                      return (
+                        <button
+                          type="button"
+                          class={`day ${day.status} ${selectedDate() === day.date ? "selected" : ""}`}
+                          data-tooltip={tip}
+                          aria-label={tip}
+                          onClick={() => toggleDay(day.date)}
+                        />
+                      );
+                    }}
+                  </For>
+                </div>
+                <div class="day-ticks">
+                  <For each={visibleDays()}>
+                    {(_, i) => {
+                      const n = firstVisibleDay() + i();
+                      return <span>{n === 1 || (n - 1) % 15 === 0 ? `D${n}` : ""}</span>;
+                    }}
+                  </For>
+                </div>
+                <div class="legend">
+                  <span class="legend-item"><span class="day completed" /> All done</span>
+                  <span class="legend-item"><span class="day partial" /> Some done</span>
+                  <span class="legend-item"><span class="day missed" /> Missed</span>
+                  <span class="legend-item"><span class="day pending" /> Today</span>
+                </div>
+                <Show when={selectedDate()}>
+                  {(() => {
+                    const day = p().days.find((d) => d.date === selectedDate());
+                    return day ? (
+                      <div class="card day-detail">
+                        <div class="row">
+                          <h3>{formatShortDate(day.date)}</h3>
+                          <span class="badge subtle">{DAY_STATUS_LABEL[day.status] ?? day.status}</span>
+                        </div>
+                        <ul class="day-goals">
+                          <For each={day.goals}>
+                            {(g) => (
+                              <li>
+                                <span class={`dot ${g.completed ? "done" : "not-done"}`} />
+                                <span class="goal-name">{g.name}</span>
+                                <span class="hint">
+                                  {g.completed ? "done" : "not done"}
+                                  {g.completed ? (() => {
+                                    const t = formatDetail({ goal_type_key: g.goal_type_key }, g.detail);
+                                    return t ? ` · ${t}` : "";
+                                  })() : ""}
+                                </span>
+                              </li>
+                            )}
+                          </For>
+                        </ul>
+                      </div>
+                    ) : null;
+                  })()}
+                </Show>
+              </Show>
+
+              <Show when={actionError()}>
+                <p class="error">{actionError()}</p>
+              </Show>
+
+              <h2 class="section-title">
+                <span class="dot plan" />
+                Goals
+              </h2>
+              <div class="list">
+                <For each={p().goals}>
+                  {(item) => {
+                    const isQuantity = item.goal.goal_type_key === "daily_quantity";
+                    const detail = item.today?.detail ?? {};
+                    const detailText = formatDetail(item.goal, detail);
                     return (
-                      <button
-                        type="button"
-                        class={`day ${day.status} ${selectedDate() === day.date ? "selected" : ""}`}
-                        data-tooltip={tip}
-                        aria-label={tip}
-                        onClick={() => toggleDay(day.date)}
-                      />
+                      <div class="card goal-row">
+                        <div class="goal-info">
+                          <div class="row">
+                            <h3>{item.goal.name}</h3>
+                            <span class="badge subtle">{item.goal.goal_type_name}</span>
+                          </div>
+                          <p class="hint">
+                            Streak {item.streak} day{item.streak === 1 ? "" : "s"}
+                            {detailText ? ` · ${detailText}` : ""}
+                          </p>
+                        </div>
+                        <div class="goal-action">
+                          <Show when={item.today.completed}>
+                            <span class="badge success">Done today</span>
+                          </Show>
+                          <Show when={!item.today.completed}>
+                            <Show when={isQuantity}>
+                              <input
+                                type="number"
+                                min="0"
+                                step="any"
+                                placeholder="amount"
+                                value={amounts()[item.goal.id] ?? ""}
+                                onInput={(e) => setAmount(item.goal.id, e.currentTarget.value)}
+                              />
+                            </Show>
+                            <button
+                              disabled={busyGoal() === item.goal.id}
+                              onClick={() => checkIn(item.goal.id, isQuantity)}
+                            >
+                              {busyGoal() === item.goal.id ? "…" : "Check in"}
+                            </button>
+                          </Show>
+                        </div>
+                      </div>
                     );
                   }}
                 </For>
               </div>
-              <div class="legend">
-                <span class="legend-item"><span class="day completed" /> All done</span>
-                <span class="legend-item"><span class="day partial" /> Some done</span>
-                <span class="legend-item"><span class="day missed" /> Missed</span>
-                <span class="legend-item"><span class="day pending" /> Today</span>
+
+              <div class="row footer-actions">
+                <div class="row">
+                  <EditButton planId={p().plan.id} />
+                  <button class="danger" onClick={deletePlan}>
+                    Delete plan
+                  </button>
+                </div>
               </div>
-              <Show when={selectedDate()}>
-                {(() => {
-                  const day = p().days.find((d) => d.date === selectedDate());
-                  return day ? (
-                    <div class="card day-detail">
-                      <div class="row">
-                        <h3>{formatShortDate(day.date)}</h3>
-                        <span class="badge subtle">{DAY_STATUS_LABEL[day.status] ?? day.status}</span>
-                      </div>
-                      <ul class="day-goals">
-                        <For each={day.goals}>
-                          {(g) => (
-                            <li>
-                              <span class={`dot ${g.completed ? "done" : "not-done"}`} />
-                              <span class="goal-name">{g.name}</span>
-                              <span class="hint">
-                                {g.completed ? "done" : "not done"}
-                                {g.completed ? (() => {
-                                  const t = formatDetail({ goal_type_key: g.goal_type_key }, g.detail);
-                                  return t ? ` · ${t}` : "";
-                                })() : ""}
-                              </span>
-                            </li>
-                          )}
-                        </For>
-                      </ul>
-                    </div>
-                  ) : null;
-                })()}
-              </Show>
-            </Show>
-
-            <Show when={actionError()}>
-              <p class="error">{actionError()}</p>
-            </Show>
-
-            <h2>Goals</h2>
-            <div class="list">
-              <For each={p().goals}>
-                {(item) => {
-                  const isQuantity = item.goal.goal_type_key === "daily_quantity";
-                  const detail = item.today?.detail ?? {};
-                  const detailText = formatDetail(item.goal, detail);
-                  return (
-                    <div class="card goal-row">
-                      <div class="goal-info">
-                        <div class="row">
-                          <h3>{item.goal.name}</h3>
-                          <span class="badge subtle">{item.goal.goal_type_name}</span>
-                        </div>
-                        <p class="hint">
-                          Streak {item.streak} day{item.streak === 1 ? "" : "s"}
-                          {detailText ? ` · ${detailText}` : ""}
-                        </p>
-                      </div>
-                      <div class="goal-action">
-                        <Show when={item.today.completed}>
-                          <span class="badge success">Done today</span>
-                        </Show>
-                        <Show when={!item.today.completed}>
-                          <Show when={isQuantity}>
-                            <input
-                              type="number"
-                              min="0"
-                              step="any"
-                              placeholder="amount"
-                              value={amounts()[item.goal.id] ?? ""}
-                              onInput={(e) => setAmount(item.goal.id, e.currentTarget.value)}
-                            />
-                          </Show>
-                          <button
-                            disabled={busyGoal() === item.goal.id}
-                            onClick={() => checkIn(item.goal.id, isQuantity)}
-                          >
-                            {busyGoal() === item.goal.id ? "…" : "Check in"}
-                          </button>
-                        </Show>
-                      </div>
-                    </div>
-                  );
-                }}
-              </For>
-            </div>
-
-            <div class="row footer-actions">
-              <div class="row">
-                <EditButton planId={p().plan.id} />
-                <button class="danger" onClick={deletePlan}>
-                  Delete plan
-                </button>
-              </div>
-            </div>
-          </>
-        )}
+            </>
+          );
+        }}
       </Show>
     </div>
   );

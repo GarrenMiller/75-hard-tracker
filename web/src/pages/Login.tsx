@@ -2,6 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 import { login } from "../store";
 import { ApiError } from "../api";
+import Logo from "../components/Logo";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -26,8 +27,12 @@ export default function Login() {
 
   return (
     <div class="auth">
+      <div class="auth-mark">
+        <Logo size={44} />
+      </div>
       <form class="card" onSubmit={onSubmit}>
-        <h1>Sign in</h1>
+        <h1 class="auth-title">Sign in</h1>
+        <p class="tagline">Seventy-five days. No excuses.</p>
         <label>
           Email
           <input

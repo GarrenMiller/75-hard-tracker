@@ -3,6 +3,7 @@ import { createSignal, Show, onMount, type JSX } from "solid-js";
 import { loadMe, user } from "./store";
 import { getToken } from "./api";
 import Sidebar from "./components/Sidebar";
+import Logo from "./components/Logo";
 
 export default function App(props: { children?: JSX.Element }) {
   const navigate = useNavigate();
@@ -30,7 +31,13 @@ export default function App(props: { children?: JSX.Element }) {
             <IconMenu />
           </button>
           <a class="brand" href="/">
-            75 Hard Tracker
+            <span style={{ color: "var(--accent)" }}>
+              <Logo size={26} />
+            </span>
+            <span class="wordmark">
+              75 HARD
+              <small>TRACKER</small>
+            </span>
           </a>
         </header>
         <main>{props.children}</main>
