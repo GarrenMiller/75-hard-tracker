@@ -461,6 +461,22 @@ input[type="number"] {
   max-width: 100px;
 }
 
+.quantity-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.quantity-input input {
+  max-width: 70px;
+}
+
+.quantity-input select {
+  width: auto;
+  padding: 9px 6px;
+  max-width: 92px;
+}
+
 label {
   display: flex;
   flex-direction: column;

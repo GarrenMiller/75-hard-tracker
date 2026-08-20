@@ -1,8 +1,8 @@
 import { useNavigate } from "@solidjs/router";
 import { createResource, createSignal, For, Show } from "solid-js";
-import { api, ApiError, type GoalType } from "../api";
+import { api, ApiError, type Goal, type GoalType } from "../api";
 
-export default function GoalForm() {
+export default function GoalForm(props: { onSaved?: (goal: Goal) => void }) {
   const navigate = useNavigate();
   const [types] = createResource(() => api.goalTypes());
   const [typeKey, setTypeKey] = createSignal<string | null>(null);
@@ -23,12 +23,19 @@ export default function GoalForm() {
     setError(null);
     setSubmitting(true);
     try {
-      await api.createGoal({
+      const saved = await api.createGoal({
         name: name() || (type()?.name ?? "Goal"),
         goal_type_key: typeKey()!,
         config: config(),
       });
-      navigate("/goals");
+      if (props.onSaved) {
+        props.onSaved(saved);
+        setName("");
+        setTypeKey(null);
+        setConfig({});
+      } else {
+        navigate("/goals");
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
@@ -79,9 +86,11 @@ export default function GoalForm() {
         <p class="error">{error()}</p>
       </Show>
       <div class="row">
-        <a class="link" href="/goals">
-          ← Back
-        </a>
+        <Show when={!props.onSaved}>
+          <a class="link" href="/goals">
+            ← Back
+          </a>
+        </Show>
         <button type="submit" disabled={submitting() || !typeKey()}>
           {submitting() ? "Creating…" : "Create goal"}
         </button>

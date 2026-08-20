@@ -3,6 +3,7 @@ from datetime import date, timedelta
 
 from .base import GoalType
 from ..errors import ApiError
+from ..units import VOLUME_UNITS, WEIGHT_UNITS, convert
 from ..util import date_from_timestamp
 
 
@@ -37,6 +38,11 @@ class DailyQuantity(GoalType):
         "required": ["target", "unit"],
     }
 
+    def to_dict(self):
+        data = super().to_dict()
+        data["units"] = {"volume": VOLUME_UNITS, "weight": WEIGHT_UNITS}
+        return data
+
     def validate_config(self, config):
         config = super().validate_config(config)
         if config["target"] <= 0:
@@ -49,6 +55,12 @@ class DailyQuantity(GoalType):
             raise ValueError("Check-in value must include a numeric 'amount'")
         if amount <= 0:
             raise ValueError("amount must be greater than 0")
+        unit = value.get("unit")
+        if unit:
+            try:
+                amount = convert(amount, unit, config["unit"])
+            except ValueError as e:
+                raise ValueError(str(e))
         return {"amount": amount}
 
     def evaluate(self, config, check_ins, day):

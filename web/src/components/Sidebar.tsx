@@ -33,21 +33,6 @@ export default function Sidebar(props: { open: boolean; onClose: () => void }) {
             <IconTarget />
             <span class="label">Goals</span>
           </A>
-          <A href="/profile" activeClass="active" onClick={closeOnMobile}>
-            <IconUser />
-            <span class="label">Profile</span>
-          </A>
-        </nav>
-        <nav class="sidebar-nav sidebar-create">
-          <span class="label section">Create</span>
-          <A href="/goals/new" activeClass="active" onClick={closeOnMobile}>
-            <IconPlus />
-            <span class="label">New goal</span>
-          </A>
-          <A href="/plans/new" activeClass="active" onClick={closeOnMobile}>
-            <IconClipboard />
-            <span class="label">New plan</span>
-          </A>
         </nav>
         <div class="sidebar-footer">
           <Show when={user()} fallback={null}>
@@ -81,23 +66,6 @@ function IconGrid() {
       <rect x="14" y="3" width="7" height="7" rx="1" />
       <rect x="3" y="14" width="7" height="7" rx="1" />
       <rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
-  );
-}
-
-function IconUser() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
-function IconPlus() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <path d="M12 5v14M5 12h14" />
     </svg>
   );
 }

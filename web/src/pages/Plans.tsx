@@ -3,6 +3,7 @@ import { createResource, createSignal, For, Show } from "solid-js";
 import { api, type Plan } from "../api";
 import EditButton from "../components/EditButton";
 import ProgressBar from "../components/ProgressBar";
+import PlanForm from "./PlanForm";
 
 const STATUS_LABEL: Record<string, string> = {
   active: "Active",
@@ -13,8 +14,14 @@ const STATUS_LABEL: Record<string, string> = {
 export default function Plans() {
   const navigate = useNavigate();
   const [plans, { refetch }] = createResource(() => api.listPlans());
+  const [showForm, setShowForm] = createSignal(false);
   const [busy, setBusy] = createSignal<number | null>(null);
   const [error, setError] = createSignal<string | null>(null);
+
+  const onSaved = () => {
+    setShowForm(false);
+    refetch();
+  };
 
   const activate = async (id: number) => {
     setError(null);
@@ -33,14 +40,18 @@ export default function Plans() {
     <div>
       <div class="row">
         <h1>Plans</h1>
-        <button onClick={() => navigate("/plans/new")}>New plan</button>
+        <button onClick={() => setShowForm((v) => !v)}>{showForm() ? "Close" : "New plan"}</button>
       </div>
+
+      <Show when={showForm()}>
+        <PlanForm onSaved={onSaved} />
+      </Show>
 
       <Show when={error()}>
         <p class="error">{error()}</p>
       </Show>
 
-      <Show when={plans()?.plans.length} fallback={<EmptyPlans onCreate={() => navigate("/plans/new")} />}>
+      <Show when={plans()?.plans.length} fallback={<Show when={!showForm()}><EmptyPlans onCreate={() => setShowForm(true)} /></Show>}>
         <div class="grid">
           <For each={plans()?.plans}>
             {(plan: Plan) => (

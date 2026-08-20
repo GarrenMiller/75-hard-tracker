@@ -120,12 +120,30 @@ def create_check_in(goal_id):
     except ValueError as e:
         raise ApiError(str(e), 400)
 
+    db = get_db()
+    active_plans = db.execute(
+        "SELECT p.id FROM plan_goals pg JOIN plans p ON p.id = pg.plan_id "
+        "WHERE pg.goal_id = ? AND p.user_id = ? AND p.status IN ('active', 'in_grace')",
+        (goal_id, g.user["id"]),
+    ).fetchall()
+    if not active_plans:
+        raise ApiError("Goal is not part of an active plan", 400)
+
+    plan_ids = {r["id"] for r in active_plans}
+    if len(plan_ids) == 1:
+        plan_id = plan_ids.pop()
+    else:
+        plan_id = data.get("plan_id")
+        if plan_id not in plan_ids:
+            raise ApiError(
+                "plan_id is required and must be an active plan containing this goal", 400
+            )
+
     completed_at = data.get("completed_at") or utc_now_str()
 
-    db = get_db()
     cur = db.execute(
-        "INSERT INTO check_ins (user_id, goal_id, completed_at, value) VALUES (?, ?, ?, ?)",
-        (g.user["id"], goal_id, completed_at, json.dumps(value)),
+        "INSERT INTO check_ins (user_id, goal_id, plan_id, completed_at, value) VALUES (?, ?, ?, ?, ?)",
+        (g.user["id"], goal_id, plan_id, completed_at, json.dumps(value)),
     )
     db.commit()
     c = db.execute("SELECT * FROM check_ins WHERE id = ?", (cur.lastrowid,)).fetchone()

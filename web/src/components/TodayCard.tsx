@@ -1,21 +1,34 @@
 import { useNavigate } from "@solidjs/router";
 import { createResource, createSignal, For, Show } from "solid-js";
-import { api } from "../api";
+import { api, type Goal } from "../api";
+import QuantityInput from "./QuantityInput";
 
 export default function TodayCard(props: { onCheckedIn?: () => void }) {
   const navigate = useNavigate();
   const [profile, { refetch }] = createResource(() => api.profile());
+  const [goalTypes] = createResource(() => api.goalTypes());
   const [amounts, setAmounts] = createSignal<Record<number, string>>({});
+  const [units, setUnits] = createSignal<Record<number, string>>({});
   const [busy, setBusy] = createSignal<number | null>(null);
+
+  const quantityUnits = () =>
+    goalTypes()?.goal_types.find((t) => t.key === "daily_quantity")?.units;
 
   const setAmount = (goalId: number, value: string) =>
     setAmounts((prev) => ({ ...prev, [goalId]: value }));
 
-  const checkIn = async (goalId: number, isQuantity: boolean) => {
-    setBusy(goalId);
+  const setUnit = (goalId: number, value: string) =>
+    setUnits((prev) => ({ ...prev, [goalId]: value }));
+
+  const goalUnit = (goal: Goal) => String(goal.config.unit ?? "");
+
+  const checkIn = async (goal: Goal, isQuantity: boolean, planId?: number) => {
+    setBusy(goal.id);
     try {
-      const value = isQuantity ? { amount: Number(amounts()[goalId] ?? 1) } : {};
-      await api.createCheckIn(goalId, { value });
+      const value = isQuantity
+        ? { amount: Number(amounts()[goal.id] ?? 1), unit: units()[goal.id] ?? goalUnit(goal) }
+        : {};
+      await api.createCheckIn(goal.id, { value, plan_id: planId });
       await refetch();
       props.onCheckedIn?.();
     } finally {
@@ -74,6 +87,7 @@ export default function TodayCard(props: { onCheckedIn?: () => void }) {
                   const activePlans = item.plans.filter(
                     (p) => p.status === "active" || p.status === "in_grace",
                   );
+                  const planId = activePlans.length ? activePlans[0].id : undefined;
                   return (
                     <li class={`today-goal ${g.today?.completed ? "done" : ""}`}>
                       <span class="today-check">
@@ -99,25 +113,25 @@ export default function TodayCard(props: { onCheckedIn?: () => void }) {
                       <Show when={detailText}>
                         <span class="hint">{detailText}</span>
                       </Show>
-                      <Show when={!g.today?.completed}>
-                        <Show when={isQuantity}>
-                          <input
-                            type="number"
-                            min="0"
-                            step="any"
-                            placeholder="amount"
-                            value={amounts()[g.id] ?? ""}
-                            onInput={(e) => setAmount(g.id, e.currentTarget.value)}
-                          />
+                        <Show when={!g.today?.completed}>
+                          <Show when={isQuantity}>
+                            <QuantityInput
+                              units={quantityUnits()}
+                              goalUnit={goalUnit(g)}
+                              amount={amounts()[g.id] ?? ""}
+                              unit={units()[g.id] ?? goalUnit(g)}
+                              onAmount={(v) => setAmount(g.id, v)}
+                              onUnit={(v) => setUnit(g.id, v)}
+                            />
+                          </Show>
+                          <button
+                            class="link"
+                            disabled={busy() === g.id}
+                            onClick={() => checkIn(g, isQuantity, planId)}
+                          >
+                            {busy() === g.id ? "…" : "Check in"}
+                          </button>
                         </Show>
-                        <button
-                          class="link"
-                          disabled={busy() === g.id}
-                          onClick={() => checkIn(g.id, isQuantity)}
-                        >
-                          {busy() === g.id ? "…" : "Check in"}
-                        </button>
-                      </Show>
                       <Show when={g.today?.completed}>
                         <span class="badge success">Done</span>
                       </Show>

@@ -68,6 +68,7 @@ def test_profile_counts(client, auth):
 def test_profile_streak(client, auth, freeze):
     freeze("2026-08-15")
     goal = make_goal(client, auth["token"])
+    make_plan(client, auth["token"], [goal["id"]])
     check_in(client, auth["token"], goal["id"])
     freeze("2026-08-16")
     check_in(client, auth["token"], goal["id"])
@@ -80,6 +81,7 @@ def test_profile_streak(client, auth, freeze):
 def test_profile_streak_breaks_on_miss(client, auth, freeze):
     freeze("2026-08-15")
     goal = make_goal(client, auth["token"])
+    make_plan(client, auth["token"], [goal["id"]])
     check_in(client, auth["token"], goal["id"])
     freeze("2026-08-17")
     check_in(client, auth["token"], goal["id"])

@@ -1,11 +1,11 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { createEffect, createResource, createSignal, For, Show } from "solid-js";
-import { api, ApiError } from "../api";
+import { api, ApiError, type Plan } from "../api";
 
-export default function PlanForm() {
+export default function PlanForm(props: { onSaved?: (plan: Plan) => void }) {
   const navigate = useNavigate();
   const params = useParams();
-  const planId = params.id ? Number(params.id) : null;
+  const planId = props.onSaved ? null : params.id ? Number(params.id) : null;
   const [plan] = createResource(() => (planId ? api.getPlan(planId) : Promise.resolve(null)));
   const [goals] = createResource(() => api.listGoals());
 
@@ -50,7 +50,16 @@ export default function PlanForm() {
         },
       };
       const saved = planId ? await api.updatePlan(planId, body) : await api.createPlan(body);
-      navigate(`/plans/${saved.id}`);
+      if (props.onSaved) {
+        props.onSaved(saved);
+        setName("");
+        setSelected([]);
+        setDuration(75);
+        setPolicy("restart_on_fail");
+        setGrace(0);
+      } else {
+        navigate(`/plans/${saved.id}`);
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
@@ -109,9 +118,7 @@ export default function PlanForm() {
       <fieldset>
         <legend>Goals</legend>
         <Show when={goals()?.goals.length === 0} fallback={null}>
-          <p class="hint">
-            No goals yet. <a href="/goals/new">Create some goals first.</a>
-          </p>
+          <p class="hint">No goals yet. Create some goals on the Goals page first.</p>
         </Show>
         <For each={goals()?.goals}>
           {(goal) => (
@@ -130,9 +137,11 @@ export default function PlanForm() {
         <p class="error">{error()}</p>
       </Show>
       <div class="row">
-        <a class="link" href="/plans">
-          ← Back
-        </a>
+        <Show when={!props.onSaved}>
+          <a class="link" href="/plans">
+            ← Back
+          </a>
+        </Show>
         <button type="submit" disabled={submitting()}>
           {submitting() ? "Saving…" : planId ? "Save changes" : "Create plan"}
         </button>

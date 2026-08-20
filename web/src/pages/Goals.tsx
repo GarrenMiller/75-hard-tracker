@@ -1,40 +1,27 @@
 import { useNavigate } from "@solidjs/router";
 import { createResource, createSignal, For, Show } from "solid-js";
 import { api } from "../api";
+import GoalForm from "./GoalForm";
 
 export default function Goals() {
   const navigate = useNavigate();
   const [profile, { refetch }] = createResource(() => api.profile());
-  const [amounts, setAmounts] = createSignal<Record<number, string>>({});
-  const [busyGoal, setBusyGoal] = createSignal<number | null>(null);
-  const [error, setError] = createSignal<string | null>(null);
+  const [showForm, setShowForm] = createSignal(false);
 
-  const setAmount = (goalId: number, value: string) =>
-    setAmounts((prev) => ({ ...prev, [goalId]: value }));
-
-  const checkIn = async (goalId: number, isQuantity: boolean) => {
-    setError(null);
-    setBusyGoal(goalId);
-    try {
-      const value = isQuantity ? { amount: Number(amounts()[goalId] ?? 1) } : {};
-      await api.createCheckIn(goalId, { value });
-      refetch();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Check-in failed");
-    } finally {
-      setBusyGoal(null);
-    }
+  const onSaved = () => {
+    setShowForm(false);
+    refetch();
   };
 
   return (
     <div>
       <div class="row">
         <h1>Goals</h1>
-        <button onClick={() => navigate("/goals/new")}>New goal</button>
+        <button onClick={() => setShowForm((v) => !v)}>{showForm() ? "Close" : "New goal"}</button>
       </div>
 
-      <Show when={error()}>
-        <p class="error">{error()}</p>
+      <Show when={showForm()}>
+        <GoalForm onSaved={onSaved} />
       </Show>
 
       <Show when={profile()} fallback={<p>Loading…</p>}>
@@ -42,17 +29,18 @@ export default function Goals() {
           <Show
             when={p().goals.length}
             fallback={
-              <div class="empty-state">
-                <div class="big">No goals yet</div>
-                <p class="sub">Goals are the daily targets that make up a plan.</p>
-                <button onClick={() => navigate("/goals/new")}>Create your first goal</button>
-              </div>
+              <Show when={!showForm()}>
+                <div class="empty-state">
+                  <div class="big">No goals yet</div>
+                  <p class="sub">Goals are the daily targets that make up a plan.</p>
+                  <button onClick={() => setShowForm(true)}>Create your first goal</button>
+                </div>
+              </Show>
             }
           >
             <div class="list">
               <For each={p().goals}>
                 {(item) => {
-                  const isQuantity = item.goal.goal_type_key === "daily_quantity";
                   const today = item.goal.today;
                   return (
                     <div class="card goal-row goal-item">
@@ -89,24 +77,6 @@ export default function Goals() {
                       <div class="goal-action">
                         <Show when={today?.completed}>
                           <span class="badge success">Done today</span>
-                        </Show>
-                        <Show when={!today?.completed}>
-                          <Show when={isQuantity}>
-                            <input
-                              type="number"
-                              min="0"
-                              step="any"
-                              placeholder="amount"
-                              value={amounts()[item.goal.id] ?? ""}
-                              onInput={(e) => setAmount(item.goal.id, e.currentTarget.value)}
-                            />
-                          </Show>
-                          <button
-                            disabled={busyGoal() === item.goal.id}
-                            onClick={() => checkIn(item.goal.id, isQuantity)}
-                          >
-                            {busyGoal() === item.goal.id ? "…" : "Check in"}
-                          </button>
                         </Show>
                       </div>
                     </div>

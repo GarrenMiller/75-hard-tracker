@@ -10,6 +10,10 @@ export interface GoalType {
   name: string;
   description: string;
   period: string;
+  units?: {
+    volume: string[];
+    weight: string[];
+  };
   config_schema: {
     properties: Record<string, { type: string; title?: string }>;
     required: string[];
@@ -177,7 +181,7 @@ export const api = {
 
   deleteGoal: (id: number) => request<{ ok: boolean }>(`/goals/${id}`, { method: "DELETE" }),
 
-  createCheckIn: (goalId: number, body: { value?: Record<string, unknown>; completed_at?: string }) =>
+  createCheckIn: (goalId: number, body: { value?: Record<string, unknown>; completed_at?: string; plan_id?: number }) =>
     request<CheckIn>(`/goals/${goalId}/check-ins`, { method: "POST", body: JSON.stringify(body) }),
 
   listCheckIns: (goalId: number) => request<{ check_ins: CheckIn[] }>(`/goals/${goalId}/check-ins`),
